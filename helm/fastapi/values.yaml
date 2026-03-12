@@ -1,0 +1,16 @@
+replicaCount: 2
+
+image:
+  repository: 889393247632.dkr.ecr.us-east-1.amazonaws.com/eks-observability-fastapi
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+resources: {}
+
+labels:
+  app: fastapi

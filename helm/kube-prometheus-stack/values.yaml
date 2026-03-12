@@ -1,0 +1,21 @@
+grafana:
+  enabled: true
+  adminPassword: prom-operator
+  service:
+    type: ClusterIP
+  defaultDashboardsEnabled: true
+
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    retention: 7d
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+alertmanager:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true

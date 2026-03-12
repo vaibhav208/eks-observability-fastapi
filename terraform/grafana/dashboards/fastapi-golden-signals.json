@@ -1,0 +1,84 @@
+{
+  "id": null,
+  "uid": "fastapi-golden-signals",
+  "title": "FastAPI – Golden Signals",
+  "tags": ["fastapi", "observability", "golden-signals"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request Rate (RPS)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "requests/sec"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate (5xx)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m]))",
+          "legendFormat": "5xx errors/sec"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency P95",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 latency"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency P99",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99 latency"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "FastAPI CPU Usage",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"fastapi\"}[5m]))",
+          "legendFormat": "CPU cores"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "FastAPI Memory Usage",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{container=\"fastapi\"}) / 1024 / 1024",
+          "legendFormat": "Memory (MB)"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}
