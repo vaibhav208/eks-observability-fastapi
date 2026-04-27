@@ -1,0 +1,83 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_REGION: us-east-1
+      ACCOUNT_ID: 797671034493
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::797671034493:role/eks-observability-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # -------- FASTAPI --------
+      - name: Build FastAPI Docker image
+        run: |
+          docker build -t fastapi-app ./apps/fastapi
+
+      - name: Tag FastAPI Docker image
+        run: |
+          docker tag fastapi-app:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-fastapi:$IMAGE_TAG
+
+      - name: Push FastAPI Docker image to ECR
+        run: |
+          docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-fastapi:$IMAGE_TAG
+
+      # -------- WEBSITE --------
+      - name: Build Website Docker image
+        run: |
+          docker build -t website ./apps/website
+
+      - name: Tag Website Docker image
+        run: |
+          docker tag website:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-website:$IMAGE_TAG
+
+      - name: Push Website Docker image to ECR
+        run: |
+          docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-website:$IMAGE_TAG
+
+      # -------- EKS ACCESS --------
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name eks-observability-cluster
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      # -------- DEPLOYMENTS --------
+      - name: Deploy FastAPI using Helm
+        run: |
+          helm upgrade --install fastapi-app ./helm/fastapi \
+            --namespace default \
+            --set image.repository=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-fastapi \
+            --set image.tag=$IMAGE_TAG
+
+      - name: Deploy Website using Helm
+        run: |
+          helm upgrade --install website ./helm/website \
+            --namespace default \
+            --set image.repository=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eks-observability-website \
+            --set image.tag=$IMAGE_TAG

@@ -1,0 +1,14 @@
+replicaCount: 2
+
+image:
+  repository: 797671034493.dkr.ecr.us-east-1.amazonaws.com/eks-observability-website
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+labels:
+  app: website

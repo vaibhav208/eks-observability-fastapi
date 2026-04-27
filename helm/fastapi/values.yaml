@@ -1,0 +1,17 @@
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+resources: {}
+
+labels:
+  app: fastapi
+
+ingress:
+  enabled: true
