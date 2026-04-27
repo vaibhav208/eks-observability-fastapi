@@ -1,20 +1,25 @@
 # Terraform
+
 .terraform/
 *.tfstate
 *.tfstate.*
 crash.log
 
 # Sensitive
+
 *.pem
 *.key
 .env
 
 # OS
+
 .DS_Store
 
 # Node (if website uses it)
+
 node_modules/
 
 # Python
+
 __pycache__/
 *.pyc
