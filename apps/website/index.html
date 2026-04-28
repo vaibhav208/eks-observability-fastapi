@@ -1,29 +1,3014 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>EKS Observability Project</title>
-</head>
-<body>
-  <h1>EKS Observability Platform</h1>
+<!doctype html>
+<html lang="en" data-theme="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Cloud-Native Observability Platform · Amazon EKS</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap"
+            rel="stylesheet"
+        />
 
-  <h2>Overview</h2>
-  <p>This project demonstrates a production-style cloud-native platform using AWS EKS, Terraform, CI/CD, and Observability tools.</p>
+        <style>
+            /* ═══════════════════════════════════════════════
+       THEME TOKENS
+    ═══════════════════════════════════════════════ */
+            :root {
+                --teal: #3fffc8;
+                --teal2: #1de8ad;
+                --amber: #f5a623;
+                --red: #ff6b6b;
+                --font-display: "Syne", sans-serif;
+                --font-mono: "DM Mono", monospace;
+                --font-body: "Inter", sans-serif;
+                --transition:
+                    background 0.3s ease, color 0.3s ease,
+                    border-color 0.3s ease;
+            }
 
-  <h2>Architecture</h2>
-  <ul>
-    <li>Terraform (Infrastructure)</li>
-    <li>EKS (Kubernetes)</li>
-    <li>FastAPI (Backend)</li>
-    <li>GitHub Actions (CI/CD)</li>
-    <li>Prometheus + Grafana (Observability)</li>
-  </ul>
+            [data-theme="dark"] {
+                --bg: #07090f;
+                --bg2: #0d1117;
+                --bg3: #111827;
+                --bg4: #010308;
+                --border: rgba(255, 255, 255, 0.07);
+                --border2: rgba(63, 255, 200, 0.22);
+                --text: #e8edf5;
+                --muted: #6b7a99;
+                --muted2: #9aa3b8;
+                --card-bg: rgba(255, 255, 255, 0.03);
+                --card-hover: rgba(63, 255, 200, 0.05);
+                --nav-bg: rgba(7, 9, 15, 0.88);
+                --grid-line: rgba(63, 255, 200, 0.025);
+                --orb-color: rgba(63, 255, 200, 0.07);
+                --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            }
 
-  <h2>Enhancements</h2>
-  <ul>
-    <li>CI/CD Automation</li>
-    <li>Multi-workload deployment</li>
-    <li>Ingress-based access</li>
-    <li>Alerting system</li>
-  </ul>
-</body>
+            [data-theme="light"] {
+                --bg: #f5f7fc;
+                --bg2: #eef0f7;
+                --bg3: #e4e8f2;
+                --bg4: #dde2ef;
+                --border: rgba(0, 0, 0, 0.08);
+                --border2: rgba(10, 140, 100, 0.3);
+                --text: #0d1117;
+                --muted: #5a6480;
+                --muted2: #3d4a68;
+                --card-bg: rgba(255, 255, 255, 0.7);
+                --card-hover: rgba(10, 140, 100, 0.06);
+                --nav-bg: rgba(245, 247, 252, 0.92);
+                --grid-line: rgba(10, 140, 100, 0.04);
+                --orb-color: rgba(10, 140, 100, 0.06);
+                --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+                --teal: #0a8c64;
+                --teal2: #087a56;
+                --amber: #b87000;
+                --red: #c93232;
+            }
+
+            /* ═══════════════════════════════════════════════
+       BASE RESET
+    ═══════════════════════════════════════════════ */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family: var(--font-body);
+                font-size: 15px;
+                line-height: 1.7;
+                overflow-x: hidden;
+                transition: var(--transition);
+            }
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background-image:
+                    linear-gradient(var(--grid-line) 1px, transparent 1px),
+                    linear-gradient(
+                        90deg,
+                        var(--grid-line) 1px,
+                        transparent 1px
+                    );
+                background-size: 60px 60px;
+                pointer-events: none;
+                z-index: 0;
+                transition: var(--transition);
+            }
+            section,
+            nav,
+            footer,
+            .metrics-strip {
+                position: relative;
+                z-index: 1;
+            }
+            code {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--teal);
+            }
+
+            /* ═══════════════════════════════════════════════
+       NAV
+    ═══════════════════════════════════════════════ */
+            nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 200;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 clamp(1rem, 5vw, 4rem);
+                height: 64px;
+                background: var(--nav-bg);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border);
+                transition: var(--transition);
+                gap: 1rem;
+            }
+            .nav-logo {
+                font-family: var(--font-mono);
+                font-size: 13px;
+                color: var(--teal);
+                letter-spacing: 0.05em;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .nav-logo span {
+                color: var(--muted);
+            }
+            .nav-links {
+                display: flex;
+                gap: 1.5rem;
+                list-style: none;
+            }
+            .nav-links a {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--muted);
+                text-decoration: none;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                transition: color 0.2s;
+            }
+            .nav-links a:hover,
+            .nav-links a.active {
+                color: var(--teal);
+            }
+
+            /* Nav right cluster */
+            .nav-right {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-shrink: 0;
+            }
+            .nav-badge {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--teal);
+                border: 1px solid var(--border2);
+                padding: 4px 10px;
+                border-radius: 2px;
+                letter-spacing: 0.06em;
+                white-space: nowrap;
+            }
+
+            /* Theme toggle button */
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                border-radius: 4px;
+                border: 1px solid var(--border2);
+                background: var(--card-bg);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition:
+                    background 0.2s,
+                    border-color 0.2s;
+                flex-shrink: 0;
+            }
+            .theme-toggle:hover {
+                background: var(--card-hover);
+            }
+            .theme-toggle svg {
+                width: 16px;
+                height: 16px;
+                color: var(--teal);
+                transition: opacity 0.2s;
+            }
+            .icon-sun {
+                display: none;
+            }
+            .icon-moon {
+                display: block;
+            }
+            [data-theme="light"] .icon-sun {
+                display: block;
+            }
+            [data-theme="light"] .icon-moon {
+                display: none;
+            }
+
+            /* Hamburger button */
+            .nav-hamburger {
+                display: none;
+                width: 36px;
+                height: 36px;
+                border-radius: 4px;
+                border: 1px solid var(--border);
+                background: var(--card-bg);
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                gap: 5px;
+                flex-shrink: 0;
+            }
+            .nav-hamburger span {
+                display: block;
+                width: 18px;
+                height: 1.5px;
+                background: var(--muted);
+                transition: all 0.3s ease;
+            }
+            .nav-hamburger.open span:nth-child(1) {
+                transform: translateY(6.5px) rotate(45deg);
+            }
+            .nav-hamburger.open span:nth-child(2) {
+                opacity: 0;
+            }
+            .nav-hamburger.open span:nth-child(3) {
+                transform: translateY(-6.5px) rotate(-45deg);
+            }
+
+            /* Mobile drawer */
+            .mobile-menu {
+                display: none;
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: var(--nav-bg);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border);
+                z-index: 199;
+                padding: 1.5rem clamp(1rem, 5vw, 4rem);
+                flex-direction: column;
+                gap: 0;
+                transition: var(--transition);
+            }
+            .mobile-menu.open {
+                display: flex;
+            }
+            .mobile-menu a {
+                font-family: var(--font-mono);
+                font-size: 13px;
+                color: var(--muted);
+                text-decoration: none;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                padding: 0.85rem 0;
+                border-bottom: 1px solid var(--border);
+                transition: color 0.2s;
+            }
+            .mobile-menu a:last-child {
+                border-bottom: none;
+            }
+            .mobile-menu a:hover {
+                color: var(--teal);
+            }
+
+            /* ═══════════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════════ */
+            .hero {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 100px clamp(1rem, 8vw, 7rem) 80px;
+                overflow: hidden;
+            }
+            .hero-orb {
+                position: absolute;
+                top: 8%;
+                right: -8%;
+                width: 640px;
+                height: 640px;
+                background: radial-gradient(
+                    circle,
+                    var(--orb-color) 0%,
+                    transparent 65%
+                );
+                pointer-events: none;
+                z-index: 0;
+                transition: var(--transition);
+            }
+            .hero-eyebrow {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 2.5rem;
+                animation: fadeUp 0.8s ease both;
+                flex-wrap: wrap;
+            }
+            .hero-eyebrow-line {
+                width: 40px;
+                height: 1px;
+                background: var(--teal);
+                flex-shrink: 0;
+            }
+            .hero-eyebrow-text {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--teal);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+            .hero-title {
+                font-family: var(--font-display);
+                font-size: clamp(2.4rem, 6.5vw, 6.2rem);
+                font-weight: 800;
+                line-height: 1;
+                letter-spacing: -0.02em;
+                max-width: 950px;
+                animation: fadeUp 0.8s 0.1s ease both;
+            }
+            .hero-title em {
+                font-style: normal;
+                color: transparent;
+                -webkit-text-stroke: 1px rgba(63, 255, 200, 0.55);
+            }
+            [data-theme="light"] .hero-title em {
+                -webkit-text-stroke: 1px rgba(10, 140, 100, 0.5);
+            }
+            .hero-title .accent {
+                color: var(--teal);
+            }
+            .hero-sub {
+                margin-top: 2rem;
+                max-width: 620px;
+                color: var(--muted2);
+                font-size: clamp(14px, 2vw, 16px);
+                font-weight: 300;
+                line-height: 1.8;
+                animation: fadeUp 0.8s 0.2s ease both;
+            }
+            .hero-meta {
+                margin-top: 3rem;
+                display: flex;
+                gap: 2rem;
+                flex-wrap: wrap;
+                animation: fadeUp 0.8s 0.3s ease both;
+            }
+            .hero-meta-item {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .hero-meta-label {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--muted);
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+            .hero-meta-value {
+                font-family: var(--font-display);
+                font-size: 13px;
+                font-weight: 600;
+            }
+            .hero-meta-value.live {
+                color: var(--teal);
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+            .hero-scroll {
+                position: absolute;
+                bottom: 2.5rem;
+                left: clamp(1rem, 8vw, 7rem);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+                letter-spacing: 0.1em;
+                animation: fadeUp 0.8s 0.5s ease both;
+            }
+            .hero-scroll-line {
+                width: 30px;
+                height: 1px;
+                background: var(--muted);
+                animation: expandLine 1.5s 1s ease infinite alternate;
+            }
+
+            /* ═══════════════════════════════════════════════
+       DIVIDER
+    ═══════════════════════════════════════════════ */
+            .divider {
+                height: 1px;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    var(--border2),
+                    transparent
+                );
+                margin: 0 clamp(1rem, 5vw, 4rem);
+            }
+
+            /* ═══════════════════════════════════════════════
+       SECTION COMMON
+    ═══════════════════════════════════════════════ */
+            .section {
+                padding: clamp(60px, 10vw, 100px) clamp(1rem, 8vw, 7rem);
+            }
+            .section-label {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--teal);
+                letter-spacing: 0.18em;
+                text-transform: uppercase;
+                margin-bottom: 1rem;
+            }
+            .section-title {
+                font-family: var(--font-display);
+                font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+                font-weight: 700;
+                line-height: 1.15;
+                letter-spacing: -0.02em;
+                margin-bottom: 1rem;
+            }
+            .section-desc {
+                color: var(--muted2);
+                max-width: 600px;
+                font-weight: 300;
+                font-size: 15px;
+            }
+
+            /* ═══════════════════════════════════════════════
+       METRICS STRIP
+    ═══════════════════════════════════════════════ */
+            .metrics-strip {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                background: var(--bg2);
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                transition: var(--transition);
+            }
+            .metric {
+                padding: 2.5rem 2rem;
+                border-right: 1px solid var(--border);
+                text-align: center;
+            }
+            .metric:last-child {
+                border-right: none;
+            }
+            .metric-value {
+                font-family: var(--font-display);
+                font-size: clamp(2rem, 5vw, 2.8rem);
+                font-weight: 800;
+                color: var(--teal);
+                line-height: 1;
+                margin-bottom: 0.5rem;
+            }
+            .metric-label {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+            }
+
+            /* ═══════════════════════════════════════════════
+       PILLARS
+    ═══════════════════════════════════════════════ */
+            .pillars-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 1.5px;
+                margin-top: 4rem;
+                background: var(--border);
+            }
+            .pillar {
+                background: var(--bg);
+                padding: 2.5rem;
+                position: relative;
+                overflow: hidden;
+                transition: background 0.3s;
+            }
+            .pillar:hover {
+                background: var(--card-hover);
+            }
+            .pillar::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 3px;
+                height: 0;
+                background: var(--teal);
+                transition: height 0.4s ease;
+            }
+            .pillar:hover::before {
+                height: 100%;
+            }
+            .pillar-number {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+                letter-spacing: 0.1em;
+                margin-bottom: 1.5rem;
+            }
+            .pillar-icon {
+                width: 44px;
+                height: 44px;
+                border: 1px solid var(--border2);
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1.5rem;
+            }
+            .pillar-icon svg {
+                width: 22px;
+                height: 22px;
+            }
+            .pillar h3 {
+                font-family: var(--font-display);
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 0.75rem;
+            }
+            .pillar p {
+                color: var(--muted2);
+                font-size: 14px;
+                line-height: 1.75;
+            }
+
+            /* ═══════════════════════════════════════════════
+       ARCHITECTURE
+    ═══════════════════════════════════════════════ */
+            .arch-layout {
+                margin-top: 4rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 3rem;
+                align-items: start;
+            }
+            .arch-diagram {
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 1.5rem 2rem;
+                font-family: var(--font-mono);
+                font-size: 12px;
+                transition: var(--transition);
+            }
+            .arch-diagram-title {
+                font-size: 10px;
+                color: var(--muted);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid var(--border);
+            }
+            .arch-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.55rem 0;
+                border-bottom: 1px solid var(--border);
+                flex-wrap: wrap;
+            }
+            .arch-row:last-child {
+                border-bottom: none;
+            }
+            .arch-badge {
+                min-width: 100px;
+                text-align: right;
+                color: var(--teal);
+                font-size: 11px;
+                flex-shrink: 0;
+            }
+            .arch-arrow {
+                color: var(--muted);
+                font-size: 10px;
+                flex-shrink: 0;
+                padding-top: 2px;
+            }
+            .arch-value {
+                color: var(--muted2);
+                font-size: 12px;
+            }
+            .arch-layers {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            .arch-layer {
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                overflow: hidden;
+                transition: var(--transition);
+            }
+            .arch-layer-header {
+                background: var(--bg3);
+                padding: 0.75rem 1.2rem;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--teal);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                border-bottom: 1px solid var(--border);
+            }
+            .arch-layer-header svg {
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+            .arch-layer-body {
+                padding: 1rem 1.2rem;
+            }
+            .arch-layer-body p {
+                color: var(--muted2);
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            /* ═══════════════════════════════════════════════
+       TECH STACK
+    ═══════════════════════════════════════════════ */
+            .stack-section {
+                background: var(--bg2);
+                border-top: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                transition: var(--transition);
+            }
+            .stack-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                margin-top: 3.5rem;
+                border: 1px solid var(--border);
+            }
+            .stack-cat {
+                padding: 1.75rem;
+                border-right: 1px solid var(--border);
+                border-bottom: 1px solid var(--border);
+                transition: var(--transition);
+            }
+            .stack-cat:nth-child(3n) {
+                border-right: none;
+            }
+            .stack-cat:nth-last-child(-n + 3) {
+                border-bottom: none;
+            }
+            .stack-cat-name {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--teal);
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                margin-bottom: 1.2rem;
+            }
+            .stack-items {
+                display: flex;
+                flex-direction: column;
+                gap: 0.55rem;
+            }
+            .stack-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 13px;
+                color: var(--muted2);
+                transition: color 0.2s;
+            }
+            .stack-item:hover {
+                color: var(--text);
+            }
+            .stack-item-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: var(--teal);
+                flex-shrink: 0;
+            }
+            .stack-item small {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--muted);
+                margin-left: auto;
+                white-space: nowrap;
+            }
+
+            /* ═══════════════════════════════════════════════
+       PIPELINE FLOW
+    ═══════════════════════════════════════════════ */
+            .flow-steps {
+                margin-top: 4rem;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+            .flow-steps::before {
+                content: "";
+                position: absolute;
+                left: 1.5rem;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: linear-gradient(
+                    to bottom,
+                    var(--teal),
+                    transparent
+                );
+            }
+            .flow-step {
+                display: grid;
+                grid-template-columns: 4rem 1fr;
+                gap: 2rem;
+                padding: 2rem 0;
+                border-bottom: 1px solid var(--border);
+                align-items: start;
+            }
+            .flow-step:last-child {
+                border-bottom: none;
+            }
+            .flow-step-num {
+                font-family: var(--font-mono);
+                font-size: 13px;
+                color: var(--muted);
+                padding-top: 3px;
+                text-align: center;
+                transition: color 0.3s;
+            }
+            .flow-step:hover .flow-step-num {
+                color: var(--teal);
+            }
+            .flow-step-content h4 {
+                font-family: var(--font-display);
+                font-size: 1.05rem;
+                font-weight: 700;
+                margin-bottom: 0.4rem;
+            }
+            .flow-step-content p {
+                color: var(--muted2);
+                font-size: 14px;
+                line-height: 1.75;
+            }
+            .flow-step-tag {
+                display: inline-block;
+                margin-top: 0.8rem;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--teal);
+                border: 1px solid var(--border2);
+                padding: 3px 10px;
+                border-radius: 2px;
+            }
+
+            /* ═══════════════════════════════════════════════
+       OBSERVABILITY CARDS
+    ═══════════════════════════════════════════════ */
+            .obs-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+                margin-top: 4rem;
+            }
+            .obs-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 2rem;
+                transition:
+                    border-color 0.3s,
+                    background 0.3s;
+            }
+            .obs-card:hover {
+                border-color: var(--border2);
+                background: var(--card-hover);
+            }
+            .obs-card-head {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 1.2rem;
+            }
+            .obs-card-icon {
+                width: 38px;
+                height: 38px;
+                border: 1px solid var(--border2);
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            .obs-card-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+            .obs-card-title {
+                font-family: var(--font-display);
+                font-size: 1rem;
+                font-weight: 700;
+            }
+            .obs-card p {
+                color: var(--muted2);
+                font-size: 13.5px;
+                line-height: 1.75;
+            }
+            .obs-card-url {
+                margin-top: 1rem;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+                border-top: 1px solid var(--border);
+                padding-top: 0.9rem;
+            }
+            .obs-card-status {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: var(--teal);
+                margin-top: 0.5rem;
+            }
+            .status-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--teal);
+                animation: pulse 1.8s infinite;
+            }
+
+            /* ═══════════════════════════════════════════════
+       TERMINAL
+    ═══════════════════════════════════════════════ */
+            .terminal-wrap {
+                margin-top: 2rem;
+            }
+            .terminal-card {
+                background: var(--bg4);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                overflow: hidden;
+                transition: var(--transition);
+            }
+            .terminal-bar {
+                background: var(--bg3);
+                padding: 0.75rem 1.25rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                border-bottom: 1px solid var(--border);
+            }
+            .tb-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+            .tb-red {
+                background: #ff5f57;
+            }
+            .tb-yellow {
+                background: #ffbd2e;
+            }
+            .tb-green {
+                background: #28c840;
+            }
+            .tb-title {
+                margin-left: 0.5rem;
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--muted);
+                letter-spacing: 0.06em;
+            }
+            .terminal-body {
+                padding: 1.5rem 2rem;
+                font-family: var(--font-mono);
+                font-size: 13px;
+                line-height: 2;
+                overflow-x: auto;
+            }
+            .t-prompt {
+                color: var(--teal);
+            }
+            .t-cmd {
+                color: var(--text);
+            }
+            .t-out {
+                color: var(--muted);
+            }
+            .t-success {
+                color: #2da84d;
+            }
+            .t-warn {
+                color: var(--amber);
+            }
+            .t-comment {
+                color: var(--border2);
+            }
+            [data-theme="light"] .t-success {
+                color: #1a7a38;
+            }
+
+            /* ═══════════════════════════════════════════════
+       ALERTS TABLE
+    ═══════════════════════════════════════════════ */
+            .alert-table-wrap {
+                margin-top: 3rem;
+                overflow-x: auto;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-family: var(--font-mono);
+                font-size: 12.5px;
+            }
+            thead tr {
+                border-bottom: 1px solid var(--border2);
+            }
+            thead th {
+                text-align: left;
+                padding: 0.9rem 1.2rem;
+                color: var(--teal);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                font-weight: 500;
+                background: var(--bg2);
+            }
+            tbody tr {
+                border-bottom: 1px solid var(--border);
+                transition: background 0.2s;
+            }
+            tbody tr:last-child {
+                border-bottom: none;
+            }
+            tbody tr:hover {
+                background: var(--card-hover);
+            }
+            tbody td {
+                padding: 0.85rem 1.2rem;
+                color: var(--muted2);
+                vertical-align: middle;
+            }
+            tbody td:first-child {
+                color: var(--text);
+            }
+            .badge {
+                display: inline-block;
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                padding: 2px 9px;
+                border-radius: 2px;
+                font-weight: 500;
+            }
+            .badge-normal {
+                background: rgba(63, 255, 200, 0.1);
+                color: var(--teal);
+                border: 1px solid var(--border2);
+            }
+            .badge-warning {
+                background: rgba(245, 166, 35, 0.1);
+                color: var(--amber);
+                border: 1px solid rgba(245, 166, 35, 0.3);
+            }
+            .badge-critical {
+                background: rgba(255, 107, 107, 0.1);
+                color: var(--red);
+                border: 1px solid rgba(255, 107, 107, 0.3);
+            }
+            [data-theme="light"] .badge-normal {
+                background: rgba(10, 140, 100, 0.08);
+            }
+            [data-theme="light"] .badge-warning {
+                background: rgba(184, 112, 0, 0.08);
+                border-color: rgba(184, 112, 0, 0.3);
+            }
+            [data-theme="light"] .badge-critical {
+                background: rgba(201, 50, 50, 0.08);
+                border-color: rgba(201, 50, 50, 0.3);
+            }
+
+            /* ═══════════════════════════════════════════════
+       CHALLENGES
+    ═══════════════════════════════════════════════ */
+            .challenges-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5px;
+                margin-top: 3.5rem;
+                background: var(--border);
+            }
+            .challenge-item {
+                background: var(--bg);
+                padding: 2rem;
+                transition: background 0.3s;
+            }
+            .challenge-item:hover {
+                background: var(--card-hover);
+            }
+            .challenge-num {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--muted);
+                margin-bottom: 0.8rem;
+            }
+            .challenge-title {
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+            .challenge-desc {
+                color: var(--muted2);
+                font-size: 13px;
+                line-height: 1.7;
+            }
+            .challenge-tag {
+                display: inline-block;
+                margin-top: 0.7rem;
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--amber);
+                border: 1px solid rgba(245, 166, 35, 0.3);
+                padding: 2px 8px;
+                border-radius: 2px;
+            }
+
+            /* ═══════════════════════════════════════════════
+       TEAM
+    ═══════════════════════════════════════════════ */
+            .team-grid {
+                margin-top: 3.5rem;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5px;
+                background: var(--border);
+            }
+            .team-card {
+                background: var(--bg);
+                padding: 2.5rem;
+                transition: background 0.3s;
+                position: relative;
+                overflow: hidden;
+            }
+            .team-card:hover {
+                background: var(--card-hover);
+            }
+            .team-card::after {
+                content: "";
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background: var(--teal);
+                transition: width 0.4s ease;
+            }
+            .team-card:hover::after {
+                width: 100%;
+            }
+            .team-role {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--teal);
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                margin-bottom: 1rem;
+            }
+            .team-name {
+                font-family: var(--font-display);
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 0.3rem;
+            }
+            .team-roll {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .team-desc {
+                margin-top: 1rem;
+                color: var(--muted2);
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            /* ═══════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════ */
+            footer {
+                padding: 3rem clamp(1rem, 8vw, 7rem);
+                border-top: 1px solid var(--border);
+                transition: var(--transition);
+            }
+            .footer-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 2rem;
+                margin-bottom: 2rem;
+            }
+            .footer-project {
+                font-family: var(--font-display);
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 0.4rem;
+            }
+            .footer-institution {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--muted);
+                line-height: 1.8;
+            }
+            .footer-links {
+                display: flex;
+                gap: 2rem;
+                flex-wrap: wrap;
+                align-items: flex-start;
+            }
+            .footer-link {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--muted);
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .footer-link:hover {
+                color: var(--teal);
+            }
+            .footer-bottom {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 1rem;
+                padding-top: 2rem;
+                border-top: 1px solid var(--border);
+            }
+            .footer-copy {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+            }
+            .footer-copy strong {
+                color: var(--teal);
+                font-weight: 500;
+            }
+            .footer-license {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: var(--muted);
+            }
+
+            /* ═══════════════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════════════ */
+            @keyframes fadeUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(22px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @keyframes expandLine {
+                from {
+                    width: 20px;
+                }
+                to {
+                    width: 50px;
+                }
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.25;
+                }
+            }
+            .reveal {
+                opacity: 0;
+                transform: translateY(28px);
+                transition:
+                    opacity 0.7s ease,
+                    transform 0.7s ease;
+            }
+            .reveal.visible {
+                opacity: 1;
+                transform: none;
+            }
+
+            /* ═══════════════════════════════════════════════
+       RESPONSIVE — TABLET  ≤ 1024px
+    ═══════════════════════════════════════════════ */
+            @media (max-width: 1024px) {
+                .nav-badge {
+                    display: none;
+                }
+                .stack-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .stack-cat:nth-child(3n) {
+                    border-right: 1px solid var(--border);
+                }
+                .stack-cat:nth-child(2n) {
+                    border-right: none;
+                }
+                .stack-cat:nth-last-child(-n + 2) {
+                    border-bottom: none;
+                }
+                .stack-cat:nth-last-child(-n + 3) {
+                    border-bottom: 1px solid var(--border);
+                }
+            }
+
+            /* ═══════════════════════════════════════════════
+       RESPONSIVE — TABLET  ≤ 860px
+    ═══════════════════════════════════════════════ */
+            @media (max-width: 860px) {
+                .nav-links {
+                    display: none;
+                }
+                .nav-hamburger {
+                    display: flex;
+                }
+                .arch-layout {
+                    grid-template-columns: 1fr;
+                    gap: 2rem;
+                }
+                .obs-grid {
+                    grid-template-columns: 1fr;
+                }
+                .metrics-strip {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .team-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+                .challenges-grid {
+                    grid-template-columns: 1fr;
+                }
+                .hero-title em {
+                    -webkit-text-stroke-width: 0.5px;
+                }
+                .flow-step {
+                    grid-template-columns: 3rem 1fr;
+                    gap: 1.25rem;
+                }
+            }
+
+            /* ═══════════════════════════════════════════════
+       RESPONSIVE — MOBILE  ≤ 600px
+    ═══════════════════════════════════════════════ */
+            @media (max-width: 600px) {
+                .metrics-strip {
+                    grid-template-columns: 1fr 1fr;
+                }
+                .metric {
+                    padding: 1.5rem 1rem;
+                }
+                .stack-grid {
+                    grid-template-columns: 1fr;
+                }
+                .stack-cat,
+                .stack-cat:nth-child(2n),
+                .stack-cat:nth-child(3n) {
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .stack-cat:last-child {
+                    border-bottom: none;
+                }
+                .team-grid {
+                    grid-template-columns: 1fr;
+                }
+                .pillars-grid {
+                    grid-template-columns: 1fr;
+                }
+                .hero-meta {
+                    gap: 1.2rem;
+                }
+                .hero-meta-item {
+                    min-width: 120px;
+                }
+                .hero-scroll {
+                    display: none;
+                }
+                .flow-steps::before {
+                    display: none;
+                }
+                .flow-step {
+                    grid-template-columns: 1fr;
+                    gap: 0.75rem;
+                }
+                .flow-step-num {
+                    text-align: left;
+                    font-size: 11px;
+                    padding-top: 0;
+                }
+                .terminal-body {
+                    font-size: 11.5px;
+                    padding: 1rem 1.25rem;
+                }
+                .arch-badge {
+                    min-width: 80px;
+                    font-size: 10px;
+                }
+                .footer-top {
+                    flex-direction: column;
+                }
+                .footer-bottom {
+                    flex-direction: column;
+                }
+                tbody td,
+                thead th {
+                    padding: 0.7rem 0.75rem;
+                    font-size: 11px;
+                }
+            }
+
+            /* ═══════════════════════════════════════════════
+       RESPONSIVE — SMALL MOBILE  ≤ 400px
+    ═══════════════════════════════════════════════ */
+            @media (max-width: 400px) {
+                .hero-title {
+                    font-size: 2rem;
+                }
+                .nav-logo {
+                    font-size: 12px;
+                }
+                .metrics-strip {
+                    grid-template-columns: 1fr;
+                }
+                .metric {
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .metric:last-child {
+                    border-bottom: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ══════════ NAV ══════════ -->
+        <nav>
+            <a class="nav-logo" href="#top"><span>//</span>CNO · EKS</a>
+
+            <ul class="nav-links">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#stack">Stack</a></li>
+                <li><a href="#pipeline">Pipeline</a></li>
+                <li><a href="#observability">Observability</a></li>
+                <li><a href="#team">Team</a></li>
+            </ul>
+
+            <div class="nav-right">
+                <div class="nav-badge">
+                    Bachelor of Technology · Major Project
+                </div>
+
+                <!-- Theme toggle -->
+                <button
+                    class="theme-toggle"
+                    id="themeToggle"
+                    aria-label="Toggle colour theme"
+                >
+                    <!-- Moon (dark mode indicator) -->
+                    <svg
+                        class="icon-moon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                        />
+                    </svg>
+                    <!-- Sun (light mode indicator) -->
+                    <svg
+                        class="icon-sun"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+
+                <!-- Hamburger -->
+                <button
+                    class="nav-hamburger"
+                    id="hamburger"
+                    aria-label="Toggle menu"
+                >
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile drawer -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#overview" onclick="closeMenu()">Overview</a>
+            <a href="#architecture" onclick="closeMenu()">Architecture</a>
+            <a href="#stack" onclick="closeMenu()">Stack</a>
+            <a href="#pipeline" onclick="closeMenu()">Pipeline</a>
+            <a href="#observability" onclick="closeMenu()">Observability</a>
+            <a href="#team" onclick="closeMenu()">Team</a>
+        </div>
+
+        <!-- ══════════ HERO ══════════ -->
+        <section class="hero" id="top">
+            <div class="hero-orb"></div>
+            <div class="hero-eyebrow">
+                <div class="hero-eyebrow-line"></div>
+                <span class="hero-eyebrow-text"
+                    >Bachelor of Technology — Computer Science and Engineering ·
+                    2025–26</span
+                >
+            </div>
+            <h1 class="hero-title">
+                Cloud-Native<br />
+                <em>Observability</em><br />
+                on <span class="accent">Amazon EKS</span>
+            </h1>
+            <p class="hero-sub">
+                A production-grade platform that deploys containerised
+                microservices on Amazon Elastic Kubernetes Service and provides
+                full-stack observability through metrics, visualization, and
+                intelligent alerting — automated from infrastructure
+                provisioning to deployment.
+            </p>
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Infrastructure</span>
+                    <span class="hero-meta-value">Terraform + Amazon EKS</span>
+                </div>
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Observability</span>
+                    <span class="hero-meta-value"
+                        >Prometheus · Grafana · Alertmanager</span
+                    >
+                </div>
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Cluster</span>
+                    <span class="hero-meta-value"
+                        >eks-observability-cluster · us-east-1</span
+                    >
+                </div>
+                <div class="hero-meta-item">
+                    <span class="hero-meta-label">Status</span>
+                    <span class="hero-meta-value live">
+                        <svg viewBox="0 0 8 8" width="8" height="8">
+                            <circle cx="4" cy="4" r="4" fill="currentColor">
+                                <animate
+                                    attributeName="opacity"
+                                    values="1;0.2;1"
+                                    dur="1.8s"
+                                    repeatCount="indefinite"
+                                />
+                            </circle>
+                        </svg>
+                        Production-Ready
+                    </span>
+                </div>
+            </div>
+            <div class="hero-scroll">
+                <div class="hero-scroll-line"></div>
+                scroll to explore
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ══════════ METRICS STRIP ══════════ -->
+        <div class="metrics-strip reveal" id="overview">
+            <div class="metric">
+                <div class="metric-value" data-target="3">0</div>
+                <div class="metric-label">Observability Signals</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" data-target="2">0</div>
+                <div class="metric-label">Application Services</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" data-target="7">0</div>
+                <div class="metric-label">Terraform Modules</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" data-target="15">0</div>
+                <div class="metric-label">Key Challenges Resolved</div>
+            </div>
+        </div>
+
+        <!-- ══════════ OVERVIEW / PILLARS ══════════ -->
+        <section class="section">
+            <div class="section-label reveal">Project Scope</div>
+            <h2 class="section-title reveal">What This Platform Does</h2>
+            <p class="section-desc reveal">
+                The system deploys a FastAPI backend and an NGINX-served static
+                website on Amazon EKS, then wraps them in a complete
+                observability stack — all provisioned through code and delivered
+                through a fully automated Continuous Integration and Continuous
+                Deployment pipeline triggered on every push to the main branch.
+            </p>
+
+            <div class="pillars-grid reveal">
+                <div class="pillar">
+                    <div class="pillar-number">01 — Metrics Collection</div>
+                    <div class="pillar-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--teal)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline
+                                points="22 12 18 12 15 21 9 3 6 12 2 12"
+                            />
+                        </svg>
+                    </div>
+                    <h3>Prometheus</h3>
+                    <p>
+                        The FastAPI backend is instrumented with
+                        <code>prometheus-fastapi-instrumentator</code>,
+                        automatically exposing a <code>/metrics</code> endpoint.
+                        A Kubernetes ServiceMonitor scrapes it every 15 seconds
+                        alongside cluster-wide node and pod metrics. Retention
+                        period: 7 days.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <div class="pillar-number">02 — Visualization</div>
+                    <div class="pillar-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--teal)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M3 9h18M9 21V9" />
+                        </svg>
+                    </div>
+                    <h3>Grafana</h3>
+                    <p>
+                        Custom Golden Signals dashboards defined as JSON, stored
+                        in a Kubernetes ConfigMap, and auto-loaded via a Grafana
+                        sidecar. Surfaces request rate, error rate, latency
+                        percentiles (P95 and P99), CPU usage, and memory usage
+                        in real time.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <div class="pillar-number">03 — Alerting</div>
+                    <div class="pillar-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--teal)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                            />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                    </div>
+                    <h3>Alertmanager</h3>
+                    <p>
+                        PrometheusRule custom resources define alert conditions
+                        for high error rate, high latency, and service-down
+                        scenarios. Alertmanager groups, deduplicates, and
+                        delivers notifications via Simple Mail Transfer Protocol
+                        with Warning and Critical severity levels.
+                    </p>
+                </div>
+                <div class="pillar">
+                    <div class="pillar-number">04 — External Monitoring</div>
+                    <div class="pillar-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--teal)"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                            />
+                        </svg>
+                    </div>
+                    <h3>Blackbox Exporter</h3>
+                    <p>
+                        A Kubernetes Probe resource configures the Prometheus
+                        Blackbox Exporter to send periodic HTTP requests to the
+                        website from outside the application layer, simulating
+                        real user access and triggering alerts if the service
+                        becomes unreachable.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ══════════ ARCHITECTURE ══════════ -->
+        <section class="section" id="architecture">
+            <div class="section-label reveal">System Design</div>
+            <h2 class="section-title reveal">Architecture Overview</h2>
+            <p class="section-desc reveal">
+                Four distinct layers compose a unified, fully automated system:
+                external access, Continuous Integration and Continuous
+                Deployment automation, Amazon Web Services infrastructure, and
+                the observability plane.
+            </p>
+
+            <div class="arch-layout reveal">
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">
+                        Cluster: eks-observability-cluster · Region: us-east-1
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Cloud</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Amazon Web Services (us-east-1)</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Networking</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Virtual Private Cloud 10.0.0.0/16 · 2 public · 2
+                            private subnets</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Kubernetes</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Amazon EKS · Kubernetes 1.29</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Containers</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Docker · Amazon Elastic Container Registry</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">IaC</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Terraform ≥ 1.4.0 · AWS Provider ~5.0</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Packages</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Helm 3 · helm upgrade --install</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Ingress</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >NGINX Ingress Controller · LoadBalancer type</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Routing</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >/ → Website &nbsp;·&nbsp; /api → FastAPI</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">State</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Amazon S3 (store) · DynamoDB (lock)</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Auth</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >OpenID Connect · IAM Role for GitHub Actions</span
+                        >
+                    </div>
+                    <div class="arch-row">
+                        <span class="arch-badge">Admin</span
+                        ><span class="arch-arrow">──▶</span
+                        ><span class="arch-value"
+                            >Bastion Host (EC2 · public subnet)</span
+                        >
+                    </div>
+                </div>
+
+                <div class="arch-layers">
+                    <div class="arch-layer">
+                        <div class="arch-layer-header">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                                />
+                            </svg>
+                            Application Layer
+                        </div>
+                        <div class="arch-layer-body">
+                            <p>
+                                FastAPI backend (Python 3.11-slim, Uvicorn on
+                                port 8000) with 2 replicas, liveness and
+                                readiness probes on <code>/health</code>,
+                                ClusterIP service port 80 → 8000. Static website
+                                via NGINX Alpine on port 80. Both images built
+                                via Dockerfiles and pushed to Amazon Elastic
+                                Container Registry tagged by Git commit SHA.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="arch-layer">
+                        <div class="arch-layer-header">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <rect
+                                    x="2"
+                                    y="3"
+                                    width="20"
+                                    height="14"
+                                    rx="2"
+                                />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
+                            </svg>
+                            Observability Layer
+                        </div>
+                        <div class="arch-layer-body">
+                            <p>
+                                Deployed in the
+                                <code>monitoring</code> namespace via
+                                kube-prometheus-stack Helm chart. Prometheus
+                                retains 7 days of time-series data. Grafana
+                                loads dashboards from a ConfigMap sidecar.
+                                Blackbox Exporter checks external website
+                                availability. Monitoring tools exposed under
+                                <code>/grafana</code>, <code>/prometheus</code>,
+                                and <code>/alertmanager</code>.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="arch-layer">
+                        <div class="arch-layer-header">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                            Infrastructure Layer
+                        </div>
+                        <div class="arch-layer-body">
+                            <p>
+                                Two Terraform execution layers:
+                                <code>terraform/infra</code> provisions Virtual
+                                Private Cloud, subnets, gateways, Amazon EKS
+                                cluster, Identity and Access Management roles,
+                                Amazon Elastic Container Registry, and Bastion
+                                Host. <code>terraform/apps</code> reads remote
+                                state outputs and deploys NGINX Ingress
+                                Controller and full observability stack.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ TECH STACK ══════════ -->
+        <section class="stack-section section" id="stack">
+            <div class="section-label reveal">Technology</div>
+            <h2 class="section-title reveal">Full Technology Stack</h2>
+            <p class="section-desc reveal">
+                Every component selected for production-grade reliability and
+                alignment with Cloud Native Computing Foundation standards.
+            </p>
+
+            <div class="stack-grid reveal">
+                <div class="stack-cat">
+                    <div class="stack-cat-name">Cloud Provider</div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Amazon Web
+                            Services<small>Primary Cloud</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Amazon Elastic
+                            Kubernetes Service<small>Orchestration</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Amazon Elastic
+                            Container Registry<small>Image Registry</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Amazon Virtual
+                            Private Cloud<small>Networking</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Amazon S3 and
+                            DynamoDB<small>Terraform State</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>EC2 Bastion
+                            Host<small>Admin Access</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-cat">
+                    <div class="stack-cat-name">
+                        Containers and Orchestration
+                    </div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Docker<small
+                                >Containerization</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Kubernetes
+                            1.29<small>Orchestration</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Helm 3<small
+                                >Package Manager</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>NGINX Ingress
+                            Controller<small>Traffic Routing</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>kubectl<small
+                                >Cluster Command Line</small
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-cat">
+                    <div class="stack-cat-name">Application</div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>FastAPI<small
+                                >Backend Framework</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Python
+                            3.11-slim<small>Runtime</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Uvicorn<small
+                                >ASGI Server · port 8000</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>NGINX
+                            Alpine<small>Web Server · port 80</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span
+                            >prometheus-fastapi-instrumentator<small
+                                >Metrics Library</small
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-cat">
+                    <div class="stack-cat-name">Observability</div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Prometheus<small
+                                >Metrics Collection</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Grafana<small
+                                >Visualization</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span
+                            >Alertmanager<small>Alert Routing</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Blackbox
+                            Exporter<small>External Checks</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Node
+                            Exporter<small>Host Metrics</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span
+                            >kube-state-metrics<small>Kubernetes Metrics</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-cat">
+                    <div class="stack-cat-name">
+                        Kubernetes Custom Resources
+                    </div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span
+                            >ServiceMonitor<small>Scrape Configuration</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span
+                            >PrometheusRule<small>Alert Definitions</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Probe<small
+                                >Blackbox Targets</small
+                            >
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>ConfigMap
+                            Dashboards<small>Grafana Sidecar</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-cat">
+                    <div class="stack-cat-name">Infrastructure and CI/CD</div>
+                    <div class="stack-items">
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>Terraform ≥
+                            1.4.0<small>Infrastructure as Code</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>GitHub
+                            Actions<small>CI/CD Pipeline</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>OpenID
+                            Connect<small>Keyless Authentication</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>AWS Identity and
+                            Access Management<small>Access Control</small>
+                        </div>
+                        <div class="stack-item">
+                            <span class="stack-item-dot"></span>AWS Command Line
+                            Interface<small>Cluster Tools</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ PIPELINE ══════════ -->
+        <section class="section" id="pipeline">
+            <div class="section-label reveal">
+                Continuous Integration and Continuous Deployment
+            </div>
+            <h2 class="section-title reveal">End-to-End Deployment Pipeline</h2>
+            <p class="section-desc reveal">
+                A push to the <code>main</code> branch triggers the entire
+                pipeline. No manual deployment steps exist after initial
+                infrastructure provisioning.
+            </p>
+
+            <div class="flow-steps reveal">
+                <div class="flow-step">
+                    <div class="flow-step-num">01</div>
+                    <div class="flow-step-content">
+                        <h4>Provision Infrastructure with Terraform</h4>
+                        <p>
+                            The <code>terraform/infra</code> layer provisions
+                            the Amazon Virtual Private Cloud (10.0.0.0/16, two
+                            public and two private subnets across two
+                            Availability Zones), Internet Gateway, NAT Gateway,
+                            Amazon EKS cluster named
+                            <code>eks-observability-cluster</code>, Identity and
+                            Access Management roles for cluster, node group,
+                            GitHub Actions (OpenID Connect), and Bastion Host.
+                            Remote state is written to Amazon S3 with DynamoDB
+                            locking.
+                        </p>
+                        <span class="flow-step-tag"
+                            >terraform init → terraform plan → terraform
+                            apply</span
+                        >
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-num">02</div>
+                    <div class="flow-step-content">
+                        <h4>Configure Kubernetes Access</h4>
+                        <p>
+                            AWS Command Line Interface updates the local
+                            kubeconfig to point at the newly created cluster.
+                            The <code>aws-auth</code> ConfigMap is updated to
+                            grant Identity and Access Management access to
+                            worker nodes and the GitHub Actions role. Access is
+                            verified with <code>kubectl get nodes</code>.
+                        </p>
+                        <span class="flow-step-tag"
+                            >aws eks update-kubeconfig --name
+                            eks-observability-cluster</span
+                        >
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-num">03</div>
+                    <div class="flow-step-content">
+                        <h4>
+                            Deploy Platform Components via Terraform
+                            Applications Layer
+                        </h4>
+                        <p>
+                            The <code>terraform/apps</code> layer reads remote
+                            state outputs and deploys NGINX Ingress Controller
+                            (LoadBalancer type), the full kube-prometheus-stack
+                            (Prometheus with 7-day retention, Grafana with
+                            default dashboards, Alertmanager), Blackbox
+                            Exporter, and ingress resources routing monitoring
+                            tools under <code>/grafana</code>,
+                            <code>/prometheus</code>, and
+                            <code>/alertmanager</code>.
+                        </p>
+                        <span class="flow-step-tag"
+                            >terraform apply (apps layer)</span
+                        >
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-num">04</div>
+                    <div class="flow-step-content">
+                        <h4>
+                            Authenticate to Amazon Web Services via OpenID
+                            Connect
+                        </h4>
+                        <p>
+                            GitHub Actions uses the
+                            <code>id-token: write</code> permission to request a
+                            JSON Web Token from GitHub's OpenID Connect
+                            provider. The token is exchanged for temporary AWS
+                            credentials by assuming the
+                            <code>eks-observability-github-actions-role</code>.
+                            No static access keys are stored in the repository
+                            at any point.
+                        </p>
+                        <span class="flow-step-tag"
+                            >aws-actions/configure-aws-credentials@v4 · OpenID
+                            Connect</span
+                        >
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-num">05</div>
+                    <div class="flow-step-content">
+                        <h4>
+                            Build and Push Docker Images to Amazon Elastic
+                            Container Registry
+                        </h4>
+                        <p>
+                            Two images are built:
+                            <code>./apps/fastapi</code> (Python 3.11-slim,
+                            Uvicorn on port 8000) and
+                            <code>./apps/website</code> (NGINX Alpine on port
+                            80). Each is tagged with the commit SHA and pushed
+                            to their respective repositories in account in the
+                            us-east-1 region.
+                        </p>
+                        <span class="flow-step-tag"
+                            >docker build · docker tag · docker push (Amazon
+                            ECR)</span
+                        >
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-num">06</div>
+                    <div class="flow-step-content">
+                        <h4>Deploy Applications via Helm Charts</h4>
+                        <p>
+                            Two Helm charts are applied:
+                            <code>helm/fastapi</code> (2 replicas, ClusterIP
+                            service on port 80 → 8000, liveness and readiness
+                            probes on <code>/health</code>, ingress rewrite on
+                            <code>/api</code>) and
+                            <code>helm/website</code> (ingress on
+                            <code>/</code>). Dynamic values pass the Amazon
+                            Elastic Container Registry repository URL and commit
+                            SHA image tag for full version traceability.
+                        </p>
+                        <span class="flow-step-tag"
+                            >helm upgrade --install fastapi-app ./helm/fastapi
+                            --set image.tag=$IMAGE_TAG</span
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-wrap reveal">
+                <div class="terminal-card">
+                    <div class="terminal-bar">
+                        <span class="tb-dot tb-red"></span
+                        ><span class="tb-dot tb-yellow"></span
+                        ><span class="tb-dot tb-green"></span>
+                        <span class="tb-title"
+                            >GitHub Actions · deploy.yml · trigger: push to
+                            main</span
+                        >
+                    </div>
+                    <div class="terminal-body">
+                        <div>
+                            <span class="t-comment"
+                                ># AWS Region: us-east-1 · Tag: ${{ github.sha
+                                }}</span
+                            >
+                        </div>
+                        <br />
+                        <div>
+                            <span class="t-prompt">STEP </span
+                            ><span class="t-cmd"
+                                >Configure AWS credentials (OpenID
+                                Connect)</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out">
+                                Assuming:
+                                arn:aws:iam::<account_number>:role/eks-observability-github-actions-role</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success">
+                                AWS credentials configured successfully via
+                                OpenID Connect.</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-prompt">STEP </span
+                            ><span class="t-cmd"
+                                >Build and push FastAPI Docker image</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out">
+                                docker build -t fastapi-app ./apps/fastapi</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out">
+                                docker push
+                                <account_number>.dkr.ecr.us-east-1.amazonaws.com/eks-observability-fastapi:$SHA</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success">
+                                FastAPI image pushed to Amazon Elastic Container
+                                Registry.</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-prompt">STEP </span
+                            ><span class="t-cmd"
+                                >Build and push Website Docker image</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out">
+                                docker build -t website ./apps/website</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success">
+                                Website image pushed to Amazon Elastic Container
+                                Registry.</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-prompt">STEP </span
+                            ><span class="t-cmd">Deploy FastAPI via Helm</span>
+                        </div>
+                        <div>
+                            <span class="t-out">
+                                helm upgrade --install fastapi-app
+                                ./helm/fastapi --namespace default</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success">
+                                Release "fastapi-app" upgraded. Happy
+                                Helming!</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-prompt">STEP </span
+                            ><span class="t-cmd">Deploy Website via Helm</span>
+                        </div>
+                        <div>
+                            <span class="t-success">
+                                Release "website" upgraded. Happy Helming!</span
+                            >
+                        </div>
+                        <br />
+                        <div>
+                            <span class="t-warn">
+                                Pipeline complete. All services live on
+                                eks-observability-cluster · us-east-1.</span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ══════════ OBSERVABILITY ══════════ -->
+        <section class="section" id="observability">
+            <div class="section-label reveal">Monitoring and Alerting</div>
+            <h2 class="section-title reveal">Observability Implementation</h2>
+            <p class="section-desc reveal">
+                All monitoring tools are deployed in the
+                <code>monitoring</code> namespace and exposed through path-based
+                routing on the NGINX Ingress Controller LoadBalancer endpoint.
+            </p>
+
+            <div class="obs-grid reveal">
+                <div class="obs-card">
+                    <div class="obs-card-head">
+                        <div class="obs-card-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--teal)"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline
+                                    points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                />
+                            </svg>
+                        </div>
+                        <span class="obs-card-title">Prometheus</span>
+                    </div>
+                    <p>
+                        Collects metrics from FastAPI <code>/metrics</code>,
+                        Kubernetes nodes (Node Exporter), pods
+                        (kube-state-metrics), and all cluster components.
+                        Retention period: 7 days. Scrape interval: 15 seconds.
+                        One replica deployed in the monitoring namespace.
+                        Evaluates PrometheusRule alert conditions continuously.
+                    </p>
+                    <div class="obs-card-status">
+                        <span class="status-dot"></span>Running in monitoring
+                        namespace · port 9090
+                    </div>
+                    <div class="obs-card-url">Ingress path: /prometheus</div>
+                </div>
+                <div class="obs-card">
+                    <div class="obs-card-head">
+                        <div class="obs-card-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--teal)"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="3"
+                                    width="18"
+                                    height="18"
+                                    rx="2"
+                                />
+                                <path d="M3 9h18M9 21V9" />
+                            </svg>
+                        </div>
+                        <span class="obs-card-title">Grafana</span>
+                    </div>
+                    <p>
+                        Displays the Golden Signals dashboard — Traffic
+                        (Requests Per Second), Error Rate (5xx percentage),
+                        Latency (P95 and P99 percentiles), CPU usage, and memory
+                        consumption. Dashboard definitions stored as JSON in a
+                        Kubernetes ConfigMap and auto-loaded by a Grafana
+                        sidecar container on startup.
+                    </p>
+                    <div class="obs-card-status">
+                        <span class="status-dot"></span>Default dashboards
+                        enabled · port 3000
+                    </div>
+                    <div class="obs-card-url">Ingress path: /grafana</div>
+                </div>
+                <div class="obs-card">
+                    <div class="obs-card-head">
+                        <div class="obs-card-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--teal)"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                                />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                        </div>
+                        <span class="obs-card-title">Alertmanager</span>
+                    </div>
+                    <p>
+                        Receives firing alerts from Prometheus, groups and
+                        deduplicates them, then routes notifications via Simple
+                        Mail Transfer Protocol email. Severity levels: Warning
+                        (performance degradation) and Critical (service
+                        unavailability). Includes documented handling for
+                        expected Amazon EKS managed-component alerts.
+                    </p>
+                    <div class="obs-card-status">
+                        <span class="status-dot"></span>Simple Mail Transfer
+                        Protocol routing configured
+                    </div>
+                    <div class="obs-card-url">Ingress path: /alertmanager</div>
+                </div>
+                <div class="obs-card">
+                    <div class="obs-card-head">
+                        <div class="obs-card-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="var(--teal)"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path
+                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                                />
+                            </svg>
+                        </div>
+                        <span class="obs-card-title">Blackbox Exporter</span>
+                    </div>
+                    <p>
+                        A Kubernetes Probe resource directs the Prometheus
+                        Blackbox Exporter to send HTTP GET requests to the
+                        website endpoint from outside the application layer,
+                        measuring response success and availability. Triggers an
+                        alert via Alertmanager when the probe fails, simulating
+                        real end-user access.
+                    </p>
+                    <div class="obs-card-status">
+                        <span class="status-dot"></span>Probe resource active ·
+                        HTTP module
+                    </div>
+                    <div class="obs-card-url">
+                        Target: website service via Ingress
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-label reveal" style="margin-top: 4rem">
+                Alert Definitions
+            </div>
+            <h3
+                class="section-title reveal"
+                style="font-size: clamp(1.3rem, 2.5vw, 1.8rem)"
+            >
+                Configured Alert Rules
+            </h3>
+            <div class="alert-table-wrap reveal">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alert Name</th>
+                            <th>Condition</th>
+                            <th>Severity</th>
+                            <th>Behaviour in Amazon EKS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>High Error Rate</td>
+                            <td>Excessive HTTP 5xx responses from FastAPI</td>
+                            <td>
+                                <span class="badge badge-critical"
+                                    >Critical</span
+                                >
+                            </td>
+                            <td>Real alert — action required</td>
+                        </tr>
+                        <tr>
+                            <td>High Latency</td>
+                            <td>
+                                P95 response time exceeds configured threshold
+                            </td>
+                            <td>
+                                <span class="badge badge-warning">Warning</span>
+                            </td>
+                            <td>Real alert — action required</td>
+                        </tr>
+                        <tr>
+                            <td>Service Down</td>
+                            <td>
+                                Zero running replicas for FastAPI deployment
+                            </td>
+                            <td>
+                                <span class="badge badge-critical"
+                                    >Critical</span
+                                >
+                            </td>
+                            <td>Real alert — action required</td>
+                        </tr>
+                        <tr>
+                            <td>Website Unavailable</td>
+                            <td>Blackbox Exporter HTTP probe fails</td>
+                            <td>
+                                <span class="badge badge-critical"
+                                    >Critical</span
+                                >
+                            </td>
+                            <td>Real alert — action required</td>
+                        </tr>
+                        <tr>
+                            <td>KubeControllerManagerDown</td>
+                            <td>
+                                Controller Manager not detected inside cluster
+                            </td>
+                            <td>
+                                <span class="badge badge-normal">Normal</span>
+                            </td>
+                            <td>
+                                Expected — managed externally by Amazon Web
+                                Services
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>KubeSchedulerDown</td>
+                            <td>Scheduler not visible inside cluster</td>
+                            <td>
+                                <span class="badge badge-normal">Normal</span>
+                            </td>
+                            <td>
+                                Expected — managed externally by Amazon Web
+                                Services
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Watchdog</td>
+                            <td>Always-firing health test alert</td>
+                            <td>
+                                <span class="badge badge-normal">Normal</span>
+                            </td>
+                            <td>
+                                Intentional — confirms alerting pipeline is
+                                operational
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="terminal-wrap reveal" style="margin-top: 3rem">
+                <div class="terminal-card">
+                    <div class="terminal-bar">
+                        <span class="tb-dot tb-red"></span
+                        ><span class="tb-dot tb-yellow"></span
+                        ><span class="tb-dot tb-green"></span>
+                        <span class="tb-title"
+                            >bash — kubectl · eks-observability-cluster ·
+                            us-east-1</span
+                        >
+                    </div>
+                    <div class="terminal-body">
+                        <div>
+                            <span class="t-prompt">❯ </span
+                            ><span class="t-cmd"
+                                >kubectl get pods -n monitoring</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success">NAME READY STATUS AGE</span>
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >prometheus-kube-prometheus-prometheus-0 2/2
+                                Running 3d</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >alertmanager-kube-prometheus-alertmanager-0 2/2
+                                Running 3d</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >kube-prometheus-grafana-7d8f9b6c4-xrtz9 3/3
+                                Running 3d</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >prometheus-node-exporter-p9kl2 1/1 Running
+                                3d</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >kube-state-metrics-5d7f8c9b4-mnxvp 1/1 Running
+                                3d</span
+                            >
+                        </div>
+                        <br />
+                        <div>
+                            <span class="t-prompt">❯ </span
+                            ><span class="t-cmd"
+                                >kubectl get pods -n default</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-success"
+                                >NAME READY STATUS RESTARTS</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >fastapi-app-6d7c9b8f4-p2qrs 1/1 Running 0</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >fastapi-app-6d7c9b8f4-wkt4x 1/1 Running 0</span
+                            >
+                        </div>
+                        <div>
+                            <span class="t-out"
+                                >website-5f8d9c7b3-mnxvk 1/1 Running 0</span
+                            >
+                        </div>
+                        <br />
+                        <div>
+                            <span class="t-warn">
+                                All systems nominal · Observability stack
+                                healthy · Prometheus scraping active</span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ══════════ CHALLENGES ══════════ -->
+        <section class="section">
+            <div class="section-label reveal">Engineering Insights</div>
+            <h2 class="section-title reveal">Key Challenges and Resolutions</h2>
+            <p class="section-desc reveal">
+                Fifteen critical challenges were resolved across infrastructure,
+                Kubernetes, Continuous Integration and Deployment, and
+                observability layers. A complete document covering over 100
+                cases is available in the project repository at
+                <code>docs/challenges-and-learnings.md</code>.
+            </p>
+
+            <div class="challenges-grid reveal">
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 01</div>
+                    <div class="challenge-title">
+                        Cross-Module Resource Referencing Failure
+                    </div>
+                    <div class="challenge-desc">
+                        Terraform execution failed when modules tried to access
+                        each other directly. Resolved by using outputs from the
+                        infrastructure layer and passing them as explicit inputs
+                        to the applications layer.
+                    </div>
+                    <span class="challenge-tag">Terraform · Modules</span>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 02</div>
+                    <div class="challenge-title">
+                        Amazon EKS Access Failure — Role-Based Access Control
+                    </div>
+                    <div class="challenge-desc">
+                        Cluster access failed for users and the Continuous
+                        Integration pipeline because Identity and Access
+                        Management roles were not mapped. Resolved by
+                        configuring the <code>aws-auth</code> ConfigMap with
+                        correct Role-Based Access Control mappings.
+                    </div>
+                    <span class="challenge-tag"
+                        >Amazon EKS · Authentication</span
+                    >
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 03</div>
+                    <div class="challenge-title">
+                        Remote State Dependency Issues
+                    </div>
+                    <div class="challenge-desc">
+                        The applications Terraform layer could not fetch outputs
+                        from the infrastructure layer due to incorrect
+                        <code>terraform_remote_state</code> backend
+                        configuration. Fixed by aligning backend configuration
+                        and explicitly declaring all required outputs.
+                    </div>
+                    <span class="challenge-tag"
+                        >Terraform · State Management</span
+                    >
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 04</div>
+                    <div class="challenge-title">
+                        Custom Resource Definitions Not Installed Before Usage
+                    </div>
+                    <div class="challenge-desc">
+                        Observability resources (ServiceMonitor, PrometheusRule)
+                        failed to apply because their Custom Resource
+                        Definitions were not yet installed. Resolved by
+                        enforcing correct dependency ordering using
+                        <code>depends_on</code> in Terraform.
+                    </div>
+                    <span class="challenge-tag"
+                        >Kubernetes · Custom Resource Definitions</span
+                    >
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 05</div>
+                    <div class="challenge-title">
+                        FastAPI Metrics Endpoint Not Available
+                    </div>
+                    <div class="challenge-desc">
+                        Prometheus could not scrape application metrics because
+                        no <code>/metrics</code> endpoint existed. Resolved by
+                        adding
+                        <code>prometheus-fastapi-instrumentator</code> and
+                        calling
+                        <code
+                            >Instrumentator().instrument(app).expose(app)</code
+                        >
+                        in <code>main.py</code>.
+                    </div>
+                    <span class="challenge-tag">FastAPI · Observability</span>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 06</div>
+                    <div class="challenge-title">
+                        Label Mismatch in Kubernetes
+                    </div>
+                    <div class="challenge-desc">
+                        Kubernetes label selectors are case-sensitive.
+                        Mismatches such as <code>app: FastAPI</code> versus
+                        <code>app: fastapi</code> broke the entire
+                        ServiceMonitor target binding. All labels were
+                        standardised across Helm chart templates and values
+                        files.
+                    </div>
+                    <span class="challenge-tag">Kubernetes · Labels</span>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 07</div>
+                    <div class="challenge-title">
+                        Image Pull Failures — ImagePullBackOff
+                    </div>
+                    <div class="challenge-desc">
+                        Pods failed to start because the Amazon Elastic
+                        Container Registry image URI was incorrect or the worker
+                        node role lacked
+                        <code>AmazonEC2ContainerRegistryReadOnly</code>
+                        permission. Both the URI format and the Identity and
+                        Access Management role policy attachment were corrected.
+                    </div>
+                    <span class="challenge-tag">Kubernetes · Amazon ECR</span>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 08</div>
+                    <div class="challenge-title">
+                        Continuous Integration Authentication Complexity
+                    </div>
+                    <div class="challenge-desc">
+                        Difficulty securing AWS access from GitHub Actions
+                        without exposing static credentials. Resolved by
+                        implementing OpenID Connect-based authentication via
+                        <code>aws-actions/configure-aws-credentials@v4</code>,
+                        eliminating all hardcoded AWS access keys.
+                    </div>
+                    <span class="challenge-tag"
+                        >Identity and Access Management · OpenID Connect</span
+                    >
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 09</div>
+                    <div class="challenge-title">
+                        Helm Release Stuck in Failed State
+                    </div>
+                    <div class="challenge-desc">
+                        A previous failed Helm deployment left stale metadata
+                        that blocked all subsequent deployments for the same
+                        release name. The failed release was cleaned up manually
+                        and re-deployment succeeded with corrected chart values.
+                    </div>
+                    <span class="challenge-tag">Helm</span>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-num">Challenge 10</div>
+                    <div class="challenge-title">
+                        Terraform Destroy Failures Due to AWS Dependencies
+                    </div>
+                    <div class="challenge-desc">
+                        AWS resources including Elastic Load Balancers and
+                        Elastic Network Interfaces remained attached after
+                        Kubernetes resources were deleted, causing
+                        <code>terraform destroy</code> to fail. Kubernetes
+                        Ingress and Service resources must be deleted before
+                        running destroy.
+                    </div>
+                    <span class="challenge-tag"
+                        >Amazon Web Services · Terraform</span
+                    >
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ══════════ TEAM ══════════ -->
+        <section class="section" id="team">
+            <div class="section-label reveal">Contributors</div>
+            <h2 class="section-title reveal">Project Team</h2>
+            <p class="section-desc reveal" style="max-width: 700px">
+                Bachelor of Technology — Computer Science and Engineering ·
+                Academic Session 2025–26<br />
+            </p>
+            <div class="team-grid reveal">
+                <div class="team-card">
+                    <div class="team-role">
+                        DevOps · Infrastructure · Observability Implementation
+                    </div>
+                    <div class="team-name">Abhay Kumar Saini</div>
+                    <div class="team-desc">
+                        Led infrastructure design and implementation using
+                        Terraform, Amazon EKS provisioning, and deployment of
+                        the complete observability stack including Prometheus,
+                        Grafana, and Alertmanager with custom dashboard and
+                        alert rule configuration.
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-role">
+                        Application Development · Integration
+                    </div>
+                    <div class="team-name">Abhijeet Kumar</div>
+                    <div class="team-desc">
+                        Built the FastAPI backend application with Prometheus
+                        instrumentation and health endpoints, the static website
+                        frontend served by NGINX, and their integration with
+                        Kubernetes deployment manifests and the CI/CD monitoring
+                        pipeline.
+                    </div>
+                </div>
+                <div class="team-card">
+                    <div class="team-role">Kubernetes Deployment · Testing</div>
+                    <div class="team-name">Vaibhav Sarkar</div>
+                    <div class="team-desc">
+                        Developed Helm chart templates for FastAPI and website
+                        deployments, managed Kubernetes resource configurations,
+                        performed failure simulation testing including pod
+                        scaling and load generation, and validated end-to-end
+                        alerting workflows.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ FOOTER ══════════ -->
+        <footer>
+            <div class="footer-top">
+                <div>
+                    <div class="footer-project">
+                        Cloud-Native Observability Platform on Amazon EKS
+                    </div>
+                    <div class="footer-institution">
+                        Bachelor of Technology — Computer Science and
+                        Engineering · 2025–26
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a
+                        class="footer-link"
+                        href="https://github.com/githubabhay2003/BTech-Major-Project-Cloud-Native-Observability-EKS"
+                        target="_blank"
+                        >GitHub Repository →</a
+                    >
+                    <a class="footer-link" href="#top">Back to Top ↑</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-copy">
+                    Released under the MIT License
+                </div>
+                <div class="footer-license">
+                    Permission granted to use, modify, and distribute with
+                    proper attribution to the original authors.
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            /* ── Theme toggle ── */
+            const html = document.documentElement;
+            const toggleBtn = document.getElementById("themeToggle");
+            const saved = localStorage.getItem("theme") || "dark";
+            html.setAttribute("data-theme", saved);
+
+            toggleBtn.addEventListener("click", () => {
+                const next =
+                    html.getAttribute("data-theme") === "dark"
+                        ? "light"
+                        : "dark";
+                html.setAttribute("data-theme", next);
+                localStorage.setItem("theme", next);
+            });
+
+            /* ── Hamburger / mobile menu ── */
+            const hamburger = document.getElementById("hamburger");
+            const mobileMenu = document.getElementById("mobileMenu");
+            hamburger.addEventListener("click", () => {
+                hamburger.classList.toggle("open");
+                mobileMenu.classList.toggle("open");
+            });
+            function closeMenu() {
+                hamburger.classList.remove("open");
+                mobileMenu.classList.remove("open");
+            }
+            // Close menu on outside click
+            document.addEventListener("click", (e) => {
+                if (
+                    !hamburger.contains(e.target) &&
+                    !mobileMenu.contains(e.target)
+                )
+                    closeMenu();
+            });
+
+            /* ── Scroll reveal ── */
+            const revealEls = document.querySelectorAll(".reveal");
+            const revealObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((e, i) => {
+                        if (e.isIntersecting) {
+                            e.target.style.transitionDelay =
+                                (i % 5) * 0.07 + "s";
+                            e.target.classList.add("visible");
+                            revealObserver.unobserve(e.target);
+                        }
+                    });
+                },
+                { threshold: 0.1 },
+            );
+            revealEls.forEach((el) => revealObserver.observe(el));
+
+            /* ── Counter animation ── */
+            function animateCounter(el, target, duration = 1400) {
+                let start = 0;
+                const step = (ts) => {
+                    if (!start) start = ts;
+                    const progress = Math.min((ts - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    el.textContent = Math.floor(eased * target);
+                    if (progress < 1) requestAnimationFrame(step);
+                    else el.textContent = target;
+                };
+                requestAnimationFrame(step);
+            }
+            const metricsObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            document
+                                .querySelectorAll(".metric-value[data-target]")
+                                .forEach((el) =>
+                                    animateCounter(
+                                        el,
+                                        parseInt(el.dataset.target),
+                                    ),
+                                );
+                            metricsObserver.disconnect();
+                        }
+                    });
+                },
+                { threshold: 0.3 },
+            );
+            const strip = document.querySelector(".metrics-strip");
+            if (strip) metricsObserver.observe(strip);
+
+            /* ── Active nav highlight ── */
+            const sections = document.querySelectorAll("section[id], div[id]");
+            const navLinks = document.querySelectorAll(".nav-links a");
+            window.addEventListener(
+                "scroll",
+                () => {
+                    let current = "";
+                    sections.forEach((s) => {
+                        if (window.scrollY >= s.offsetTop - 90) current = s.id;
+                    });
+                    navLinks.forEach((a) =>
+                        a.classList.toggle(
+                            "active",
+                            a.getAttribute("href") === "#" + current,
+                        ),
+                    );
+                },
+                { passive: true },
+            );
+        </script>
+    </body>
 </html>
