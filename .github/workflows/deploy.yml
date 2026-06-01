@@ -15,7 +15,7 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      ACCOUNT_ID: 797671034493
+      ACCOUNT_ID: 800309353239
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
@@ -25,7 +25,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::797671034493:role/eks-observability-github-actions-role
+          role-to-assume: arn:aws:iam::800309353239:role/eks-observability-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR

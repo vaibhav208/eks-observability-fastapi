@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: 797671034493.dkr.ecr.us-east-1.amazonaws.com/eks-observability-website
+  repository: 800309353239.dkr.ecr.us-east-1.amazonaws.com/eks-observability-website
   tag: latest
   pullPolicy: IfNotPresent
 

@@ -406,8 +406,8 @@ Ensure the following tools are installed:
 
 | Name | Role |
 |------|------|
-| **Abhay Kumar Saini** | DevOps, Infrastructure & Observability |
-| **Abhijeet Kumar** | Application Development & Integration |
+| **Abhay Kumar Saini** | Application Development & Integration |
+| **Abhijeet Kumar** | DevOps, Infrastructure & Observability |
 | **Vaibhav Sarkar** | Kubernetes Deployment & Testing |
 
 ---

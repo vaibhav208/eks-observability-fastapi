@@ -20,7 +20,7 @@ resource "kubernetes_config_map_v1_data" "aws_auth" {
         groups   = ["system:masters"]
       },
       {
-        rolearn  = "arn:aws:iam::797671034493:role/eks-observability-github-actions-role"
+        rolearn  = "arn:aws:iam::800309353239:role/eks-observability-github-actions-role"
         username = "github-actions"
         groups   = ["system:masters"]
       }
